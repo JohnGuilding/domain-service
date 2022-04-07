@@ -92,10 +92,29 @@ contract DomainService is ERC721URIStorage {
 
 
     function getAllNames() public view returns (string[] memory) {
+        console.log('Getting all names from contract');
+        string[] memory allNames = new string[](_tokenIds.current());
+        for (uint i = 0; i < _tokenIds.current(); i++) {
+            allNames[i] = names[i];
+            console.log('Name for token %d is %s', i, allNames[i]);
+        }
 
+        return allNames;
     }
 
-    function withdraw() public {
+    modifier onlyOwner() {
+        require(isOwner());
+        _;
+    }
 
+    function isOwner() public view returns (bool) {
+        return msg.sender == owner;
+    }
+
+    function withdraw() public onlyOwner {
+        uint amount = address(this).balance;
+
+        (bool success, ) = msg.sender.call{value: amount}('');
+        require(success, 'Failed to withdraw Matic');
     }
 }
