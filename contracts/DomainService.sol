@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "hardhat/console.sol";
 import { StringUtils } from "./libraries/StringUtils.sol";
+import { Base64 } from "./libraries/Base64.sol";
 
 contract DomainService is ERC721URIStorage {
     using Counters for Counters.Counter;
@@ -46,7 +47,49 @@ contract DomainService is ERC721URIStorage {
     }
 
     function register(string calldata name) public payable {
+        uint _price = calculatePrice(name);
+        require(msg.value >= _price, 'Not enough Matic paid');
+
+        string memory _name = string(abi.encodePacked(name, '.', topLevelDomain));
+        string memory finalSvg = string(abi.encodePacked(svgPartOne, _name, svgPartTwo));
+        uint256 newRecordId = _tokenIds.current();
+        uint256 length = StringUtils.strlen(name);
+        string memory stringLength = Strings.toString(length);
+
+        console.log('Registering %s. %s on the contract with tokenId %d', name, topLevelDomain, newRecordId);
+
+        string memory json = Base64.encode(
+            bytes(
+                string(
+                    abi.encodePacked(
+                        '{"name": "',
+                        _name,
+                        '", "description": "A domain on the Disco name service", "image": "data:image/svg+xml;base64,',
+                        Base64.encode(bytes(finalSvg)),
+                        '","length":"',
+                        stringLength,
+                        '"}'
+                    )
+                )
+            )
+        );
+
+        string memory finalTokenUri = string(abi.encodePacked('data:application/json;base64,', json));
+
+        console.log("\n--------------------------------------------------------");
+        console.log("Final tokenURI", finalTokenUri);
+        console.log("--------------------------------------------------------\n");
+
+        _safeMint(msg.sender, newRecordId);
+        _setTokenURI(newRecordId, finalTokenUri);
+        domains[name] = msg.sender;
+
+        names[newRecordId] = name;
+        _tokenIds.increment();
     }
+
+
+
 
     function getAllNames() public view returns (string[] memory) {
 
