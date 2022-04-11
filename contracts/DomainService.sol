@@ -27,10 +27,10 @@ contract DomainService is ERC721URIStorage {
 
     address payable public owner;
 
-    constructor(string memory _topLevelDomain) ERC721('Domain Name Service', 'DNS') payable {
+    constructor(string memory _topLevelDomain) ERC721('GM Name Service', 'GNS') payable {
         owner = payable(msg.sender);
         topLevelDomain = _topLevelDomain;
-        console.log('%s name service deployed');
+        console.log('%s name service deployed', _topLevelDomain);
     }
 
     function calculatePrice(string calldata name) public pure returns (uint price) {
@@ -59,7 +59,7 @@ contract DomainService is ERC721URIStorage {
         uint256 length = StringUtils.strlen(name);
         string memory stringLength = Strings.toString(length);
 
-        console.log('Registering %s. %s on the contract with tokenId %d', name, topLevelDomain, newRecordId);
+        console.log('Registering %s.%s on the contract with tokenId %d', name, topLevelDomain, newRecordId);
 
         string memory json = Base64.encode(
             bytes(
