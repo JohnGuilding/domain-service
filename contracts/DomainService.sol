@@ -88,9 +88,6 @@ contract DomainService is ERC721URIStorage {
         _tokenIds.increment();
     }
 
-
-
-
     function getAllNames() public view returns (string[] memory) {
         console.log('Getting all names from contract');
         string[] memory allNames = new string[](_tokenIds.current());
@@ -100,6 +97,24 @@ contract DomainService is ERC721URIStorage {
         }
 
         return allNames;
+    }
+
+    function valid(string calldata name) public pure returns (bool) {
+        uint256 nameLength = StringUtils.strlen(name);
+        return nameLength >= 3 && nameLength <=10;
+    }
+
+    function getAddress(string calldata name) public view returns (address) {
+        return domains[name];
+    }
+
+    function setRecord(string calldata name, string calldata record) public {
+        if (msg.sender != domains[name]) revert Unauthorized();
+        records[name] = record;
+    }
+
+    function getRecord(string calldata name) public view returns (string memory) {
+        return records[name];
     }
 
     modifier onlyOwner() {
