@@ -47,6 +47,9 @@ contract DomainService is ERC721URIStorage {
     }
 
     function register(string calldata name) public payable {
+        if (domains[name] != address(0)) revert AlreadyRegistered();
+        if (!valid(name)) revert InvalidName(name);
+
         uint _price = calculatePrice(name);
         require(msg.value >= _price, 'Not enough Matic paid');
 
