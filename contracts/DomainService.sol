@@ -18,12 +18,22 @@ contract DomainService is ERC721URIStorage {
     string svgPartTwo = '</text></svg>';
 
     mapping(string => address) public domains;
-    mapping(string => string) public records;
+    mapping(string => string) public descriptions;
+    mapping(string => string) public emails;
+    mapping(string => string) public twitterAccounts;
+    mapping(string => string) public memes;
     mapping(uint => string) public names;
+
+    struct DomainMetadata {
+        string description;
+        string email;
+        string twitterAccount;
+        string meme;
+    }
 
     error Unauthorized();
     error AlreadyRegistered();
-    error InvalidName(string name);
+    error InvalidName(string _name);
 
     address payable public owner;
 
@@ -33,8 +43,8 @@ contract DomainService is ERC721URIStorage {
         console.log('%s name service deployed', _topLevelDomain);
     }
 
-    function calculatePrice(string calldata name) public pure returns (uint price) {
-        uint length = StringUtils.strlen(name);
+    function calculatePrice(string calldata _name) public pure returns (uint price) {
+        uint length = StringUtils.strlen(_name);
         require(length > 0, 'Domain name must be 3 or more characters long');
         if (length == 3) {
             // 3 MATIC = 3 000 000 000 000 000 000 (18 decimals). This is 0.3 Matic
@@ -46,28 +56,28 @@ contract DomainService is ERC721URIStorage {
         }
     }
 
-    function register(string calldata name) public payable {
-        if (domains[name] != address(0)) revert AlreadyRegistered();
-        if (!valid(name)) revert InvalidName(name);
+    function register(string calldata _name) public payable {
+        if (domains[_name] != address(0)) revert AlreadyRegistered();
+        if (!valid(_name)) revert InvalidName(_name);
 
-        uint _price = calculatePrice(name);
+        uint _price = calculatePrice(_name);
         require(msg.value >= _price, 'Not enough Matic paid');
 
-        string memory _name = string(abi.encodePacked(name, '.', topLevelDomain));
-        string memory finalSvg = string(abi.encodePacked(svgPartOne, _name, svgPartTwo));
-        uint256 newRecordId = _tokenIds.current();
-        uint256 length = StringUtils.strlen(name);
+        string memory encodedName = string(abi.encodePacked(_name, '.', topLevelDomain));
+        string memory finalSvg = string(abi.encodePacked(svgPartOne, encodedName, svgPartTwo));
+        uint256 newTokenId = _tokenIds.current();
+        uint256 length = StringUtils.strlen(_name);
         string memory stringLength = Strings.toString(length);
 
-        console.log('Registering %s.%s on the contract with tokenId %d', name, topLevelDomain, newRecordId);
+        console.log('Registering %s.%s on the contract with tokenId %d', _name, topLevelDomain, newTokenId);
 
         string memory json = Base64.encode(
             bytes(
                 string(
                     abi.encodePacked(
                         '{"name": "',
-                        _name,
-                        '", "description": "A domain on the Disco name service", "image": "data:image/svg+xml;base64,',
+                        encodedName,
+                        '", "description": "A domain on the GM name service", "image": "data:image/svg+xml;base64,',
                         Base64.encode(bytes(finalSvg)),
                         '","length":"',
                         stringLength,
@@ -83,12 +93,26 @@ contract DomainService is ERC721URIStorage {
         console.log("Final tokenURI", finalTokenUri);
         console.log("--------------------------------------------------------\n");
 
-        _safeMint(msg.sender, newRecordId);
-        _setTokenURI(newRecordId, finalTokenUri);
-        domains[name] = msg.sender;
+        _safeMint(msg.sender, newTokenId);
+        _setTokenURI(newTokenId, finalTokenUri);
+        domains[_name] = msg.sender;
 
-        names[newRecordId] = name;
+        names[newTokenId] = _name;
         _tokenIds.increment();
+    }
+
+    function setDomainMetadata(
+        string calldata _name,
+        string calldata _description,
+        string calldata _email,
+        string calldata _twitterUrl,
+        string calldata _meme
+    ) public {
+        if (msg.sender != domains[_name]) revert Unauthorized();
+        descriptions[_name] = _description;
+        emails[_name] = _email;
+        twitterAccounts[_name] = _twitterUrl;
+        memes[_name] = _meme;
     }
 
     function getAllNames() public view returns (string[] memory) {
@@ -102,22 +126,22 @@ contract DomainService is ERC721URIStorage {
         return allNames;
     }
 
-    function valid(string calldata name) public pure returns (bool) {
-        uint256 nameLength = StringUtils.strlen(name);
+    function valid(string calldata _name) public pure returns (bool) {
+        uint256 nameLength = StringUtils.strlen(_name);
         return nameLength >= 3 && nameLength <=10;
     }
 
-    function getAddress(string calldata name) public view returns (address) {
-        return domains[name];
+    function getDomainMetadata(string calldata _name) public view returns (DomainMetadata memory domainMetadata) {
+        domainMetadata = DomainMetadata(
+            descriptions[_name],
+            emails[_name],
+            twitterAccounts[_name],
+            memes[_name]
+        );
     }
 
-    function setRecord(string calldata name, string calldata record) public {
-        if (msg.sender != domains[name]) revert Unauthorized();
-        records[name] = record;
-    }
-
-    function getRecord(string calldata name) public view returns (string memory) {
-        return records[name];
+    function getDomain(string calldata _name) public view returns (address) {
+        return domains[_name];
     }
 
     modifier onlyOwner() {
