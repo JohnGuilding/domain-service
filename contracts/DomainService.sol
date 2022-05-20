@@ -20,14 +20,14 @@ contract DomainService is ERC721URIStorage {
     mapping(string => address) public domains;
     mapping(string => string) public descriptions;
     mapping(string => string) public emails;
-    mapping(string => string) public twitterAccounts;
+    mapping(string => string) public twitterHandles;
     mapping(string => string) public memes;
     mapping(uint => string) public names;
 
     struct DomainMetadata {
         string description;
         string email;
-        string twitterAccount;
+        string twitterHandle;
         string meme;
     }
 
@@ -105,13 +105,13 @@ contract DomainService is ERC721URIStorage {
         string calldata _name,
         string calldata _description,
         string calldata _email,
-        string calldata _twitterUrl,
+        string calldata _twitterHandle,
         string calldata _meme
     ) public {
         if (msg.sender != domains[_name]) revert Unauthorized();
         descriptions[_name] = _description;
         emails[_name] = _email;
-        twitterAccounts[_name] = _twitterUrl;
+        twitterHandles[_name] = _twitterHandle;
         memes[_name] = _meme;
     }
 
@@ -135,7 +135,7 @@ contract DomainService is ERC721URIStorage {
         domainMetadata = DomainMetadata(
             descriptions[_name],
             emails[_name],
-            twitterAccounts[_name],
+            twitterHandles[_name],
             memes[_name]
         );
     }

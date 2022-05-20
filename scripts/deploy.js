@@ -8,18 +8,18 @@ const main = async () => {
     await txn.wait();
     console.log('Minted domain for letsgo.gm');
 
-    txn = await domainServiceContract.setRecord('letsgo', 'Let\'s go');
+    txn = await domainServiceContract.setDomainMetadata(
+        'letsgo',
+        'Let\'s go',
+        'jwguilding@gmail.com',
+        'solleio',
+        'https://twitter.com/stablekwon/status/1464897977793728514',
+        );
     await txn.wait();
-    console.log('Set the record for letsgo.gm');
+    console.log('Set metadata for domain');
 
-    const address = await domainServiceContract.getAddress('letsgo');
-    console.log('Owner of domain letsgo:', address);
-
-    const balance = await hre.ethers.provider.getBalance(domainServiceContract.address);
-    console.log('Contract balance:', hre.ethers.utils.formatEther(balance));
-
-    const allNames = await domainServiceContract.getAllNames();
-    console.log(allNames);
+    const metadata = await domainServiceContract.getDomainMetadata('letsgo');
+    console.log('Metadata: ', metadata);
 }
 
 const runMain = async () => {
